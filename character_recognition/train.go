@@ -16,7 +16,7 @@ func main() {
 	param.KernelType = libSvm.LINEAR
 	param.C = 0.5
 
-	problem, e := libSvm.NewProblem("../train.csv", param)
+	problem, e := libSvm.NewProblem("train.csv", param)
 	if e != nil {
 		panic(e)
 	}
