@@ -6,13 +6,17 @@ import (
 	"runtime"
 )
 
+var pathCSV  = "dataset"
 func main() {
+	//If don't have file data csv
+	//utilities.CreateCSVFileFromData(pathCSV)
+
 	param := libSvm.NewParameter()
 	param.SvmType = libSvm.C_SVC
 	param.KernelType = libSvm.LINEAR
 	param.C = 0.5
 
-	problem, e := libSvm.NewProblem("/home/phuoc/work-go/src/git.cyradar.com/phuocnn/licence-plate-recognition/train.csv", param)
+	problem, e := libSvm.NewProblem("../train.csv", param)
 	if e != nil {
 		panic(e)
 	}
