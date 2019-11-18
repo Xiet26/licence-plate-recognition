@@ -20,7 +20,7 @@ func MatToMapIntFloat(mat gocv.Mat) map[int]float64 {
 	return result
 }
 
-func ToMapIntFloat(filename string) (map[int]float64, error ) {
+func ToMapIntFloat(filename string) (map[int]float64, error) {
 	result := make(map[int]float64)
 	img := gocv.IMRead(filename, gocv.IMReadColor)
 	if img.Empty() {
@@ -39,22 +39,20 @@ func ToMapIntFloat(filename string) (map[int]float64, error ) {
 	return result, nil
 }
 
-func DataMap(path string) (map[float64]string, error) {
+func DataMap() map[float64]string {
 	result := make(map[float64]string)
-	folders, e := ioutil.ReadDir(path)
-	if e != nil {
-		return result, e
+
+	// 0 - 9
+	for i := 48; i <= 57; i++ {
+		result[float64(i)] = string(i)
 	}
 
-	for _, v := range folders {
-		if !v.IsDir() {
-			continue
-		}
-
-		result[float64(v.Name()[0])] = string(v.Name()[0])
+	// A - Z
+	for i := 65; i <= 90; i++ {
+		result[float64(i)] = string(i)
 	}
 
-	return result, nil
+	return result
 }
 
 func ToLineCSV(filename string) (string, error) {
