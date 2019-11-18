@@ -20,12 +20,11 @@ func MatToMapIntFloat(mat gocv.Mat) map[int]float64 {
 	return result
 }
 
-func ToMapIntFloat(filename string) map[int]float64 {
+func ToMapIntFloat(filename string) (map[int]float64, error ) {
 	result := make(map[int]float64)
 	img := gocv.IMRead(filename, gocv.IMReadColor)
 	if img.Empty() {
-		fmt.Println("empty")
-		return result
+		return result, fmt.Errorf(ERROR_EMPTY_IMAGE)
 	}
 
 	grayImg := gocv.NewMat()
@@ -37,14 +36,14 @@ func ToMapIntFloat(filename string) map[int]float64 {
 		result[k] = float64(v)
 	}
 
-	return result
+	return result, nil
 }
 
-func DataMap() map[float64]string {
+func DataMap(path string) (map[float64]string, error) {
 	result := make(map[float64]string)
-	folders, e := ioutil.ReadDir("/home/phuoc/work-go/src/git.cyradar.com/phuocnn/licence-plate-recognition/dataset")
+	folders, e := ioutil.ReadDir(path)
 	if e != nil {
-		return result
+		return result, e
 	}
 
 	for _, v := range folders {
@@ -55,14 +54,13 @@ func DataMap() map[float64]string {
 		result[float64(v.Name()[0])] = string(v.Name()[0])
 	}
 
-	return result
+	return result, nil
 }
 
-func ToLineCSV(filename string) string {
+func ToLineCSV(filename string) (string, error) {
 	img := gocv.IMRead(filename, gocv.IMReadColor)
 	if img.Empty() {
-		fmt.Println("empty")
-		return ""
+		return "", fmt.Errorf(ERROR_EMPTY_IMAGE)
 	}
 
 	grayImg := gocv.NewMat()
@@ -75,7 +73,7 @@ func ToLineCSV(filename string) string {
 		line = line + fmt.Sprintf("%d:%d ", k, v)
 	}
 
-	return line
+	return line, nil
 }
 
 func ListFolders(folder string) []string {
@@ -97,12 +95,12 @@ func ListFolders(folder string) []string {
 	return result
 }
 
-func ListFiles(folder string) []string {
+func ListFiles(folder string) ([]string, error) {
 	result := make([]string, 0)
 
 	files, e := ioutil.ReadDir(folder)
 	if e != nil {
-		return result
+		return result, e
 	}
 
 	count := 0
@@ -118,7 +116,7 @@ func ListFiles(folder string) []string {
 		}
 	}
 
-	return result
+	return result, nil
 }
 
 func CreateCSVFileFromData(src string) {
@@ -130,7 +128,11 @@ func CreateCSVFileFromData(src string) {
 
 	allFiles := make([]string, 0)
 	for _, v := range allFolder {
-		allFiles = append(allFiles, ListFiles(v)...)
+		listFiles, err := ListFiles(v)
+		if err != nil {
+			continue
+		}
+		allFiles = append(allFiles, listFiles...)
 	}
 
 	// write data to csv
@@ -141,9 +143,12 @@ func CreateCSVFileFromData(src string) {
 	defer f.Close()
 
 	for k, v := range allFiles {
-		line := ToLineCSV(v)
-		_, e := f.WriteString(fmt.Sprintf("%s\n", line))
-		if e != nil {
+		line, err := ToLineCSV(v)
+		if err != nil {
+			continue
+		}
+		_, err = f.WriteString(fmt.Sprintf("%s\n", line))
+		if err != nil {
 			continue
 		}
 		if k%100 == 0 {
