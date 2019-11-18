@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
-	"git.cyradar.com/phuocnn/licence-plate-recognition/core/utilities"
 	libSvm "github.com/ewalker544/libsvm-go"
 	"gocv.io/x/gocv"
 	"golang.org/x/image/colornames"
 	"image"
+	"licence-plate-recognition/utilities"
 	"sort"
 )
 
-const FOLDER_PART = `/home/phuoc/work-go/src/git.cyradar.com/phuocnn/licence-plate-recognition/licenceplatesimage/` //image folder
+const FOLDER_PART = `../licenceplatesimage/` //image folder
 
 var (
 	lengthOfLicencePlate = 9
@@ -137,8 +137,8 @@ func main() {
 		imgForRecognize[k] = tmp
 	}
 
-	// load model
-	model := libSvm.NewModelFromFile("/home/phuoc/work-go/src/git.cyradar.com/phuocnn/licence-plate-recognition/train.svm")
+	//load model
+	model := libSvm.NewModelFromFile("../train.svm")
 
 	for i := 0; i < len(imgForRecognize); i++ {
 		grayImg := gocv.NewMat()

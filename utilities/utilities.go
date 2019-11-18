@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gocv.io/x/gocv"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
@@ -56,7 +57,6 @@ func DataMap() map[float64]string {
 
 	return result
 }
-
 
 func ToLineCSV(filename string) string {
 	img := gocv.IMRead(filename, gocv.IMReadColor)
@@ -121,3 +121,34 @@ func ListFiles(folder string) []string {
 	return result
 }
 
+func CreateCSVFileFromData(src string) {
+	allFolder := ListFolders(src)
+	if len(allFolder) == 0 {
+		fmt.Println("error no data")
+		return
+	}
+
+	allFiles := make([]string, 0)
+	for _, v := range allFolder {
+		allFiles = append(allFiles, ListFiles(v)...)
+	}
+
+	// write data to csv
+	f, e := os.Create("train.csv")
+	if e != nil {
+		panic(e)
+	}
+	defer f.Close()
+
+	for k, v := range allFiles {
+		line := ToLineCSV(v)
+		_, e := f.WriteString(fmt.Sprintf("%s\n", line))
+		if e != nil {
+			continue
+		}
+		if k%100 == 0 {
+			fmt.Println(k)
+		}
+	}
+
+}
