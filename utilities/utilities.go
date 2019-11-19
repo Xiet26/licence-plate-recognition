@@ -42,12 +42,12 @@ func ToMapIntFloat(filename string) (map[int]float64, error) {
 func DataMap() map[float64]string {
 	result := make(map[float64]string)
 
-	// 0 - 9
+	// 0 - 9 ASCII code
 	for i := 48; i <= 57; i++ {
 		result[float64(i)] = string(i)
 	}
 
-	// A - Z
+	// A - Z ASCII code
 	for i := 65; i <= 90; i++ {
 		result[float64(i)] = string(i)
 	}
@@ -74,12 +74,12 @@ func ToLineCSV(filename string) (string, error) {
 	return line, nil
 }
 
-func ListFolders(folder string) []string {
+func ListFolders(folder string) ([]string, error) {
 	result := make([]string, 0)
 
 	folders, e := ioutil.ReadDir(folder)
 	if e != nil {
-		return result
+		return result, e
 	}
 
 	for _, v := range folders {
@@ -90,7 +90,7 @@ func ListFolders(folder string) []string {
 		result = append(result, fmt.Sprintf("%s/%s", folder, v.Name()))
 	}
 
-	return result
+	return result, nil
 }
 
 func ListFiles(folder string) ([]string, error) {
@@ -101,27 +101,20 @@ func ListFiles(folder string) ([]string, error) {
 		return result, e
 	}
 
-	count := 0
 	for _, v := range files {
 		if v.IsDir() {
 			continue
 		}
-
 		result = append(result, fmt.Sprintf("%s/%s", folder, v.Name()))
-		count++
-		if count > 500 {
-			break
-		}
 	}
 
 	return result, nil
 }
 
-func CreateCSVFileFromData(src string) {
+func CreateCSVFileFromData(src string) error {
 	allFolder := ListFolders(src)
 	if len(allFolder) == 0 {
-		fmt.Println("error no data")
-		return
+		return fmt.Errorf(ERROR_EMPTY_DATA)
 	}
 
 	allFiles := make([]string, 0)
@@ -153,5 +146,5 @@ func CreateCSVFileFromData(src string) {
 			fmt.Println(k)
 		}
 	}
-
+	return nil
 }

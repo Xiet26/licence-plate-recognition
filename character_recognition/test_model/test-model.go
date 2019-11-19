@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 )
+const SIZE_TRAIN = 500
 
 var log *logrus.Logger
 
@@ -37,7 +38,7 @@ func main() {
 			}
 
 			count++
-			if count < 500 {
+			if count < SIZE_TRAIN {
 				continue
 			}
 			allFiles = append(allFiles, fmt.Sprintf("%s/%s", v, file.Name()))
