@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"git.cyradar.com/phuocnn/licence-plate-recognition/utilities"
 	libSvm "github.com/ewalker544/libsvm-go"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
+	"licence-plate-recognition/utilities"
 	"os"
 	"path/filepath"
 )

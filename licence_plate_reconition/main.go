@@ -10,21 +10,24 @@ import (
 	"sort"
 )
 
-const FOLDER_PART = `../licenceplatesimage/` //image folder
+const (
+	FOLDER_PART = `licenceplatesimage` //image folder
+	EXPAND_SIZE = 4
+)
 
 var (
-	lengthOfLicencePlate = 9
-	fileName             = "DL7CQ1939.jpg" //image name
+	lengthOfLicencePlate = 8
+	fileName             = "51A99999.jpg" //image name
 	dataMap              = utilities.DataMap()
 )
 
 func main() {
 	//read image
-	filePath := fmt.Sprintf("%s%s", FOLDER_PART, fileName)
+	filePath := fmt.Sprintf("%s/%s", FOLDER_PART, fileName)
 	fmt.Println(filePath)
 	img := gocv.IMRead(filePath, gocv.IMReadColor)
 	if img.Empty() {
-		fmt.Println("empty")
+		fmt.Println("empty image")
 		return
 	}
 	//________________Car image__________________
@@ -71,7 +74,14 @@ func main() {
 		peri := gocv.ArcLength(contour, true)
 		approx := gocv.ApproxPolyDP(contour, 0.06*peri, true)
 		if len(approx) == 4 {
+			min := approx[0]
+			max := approx[2]
+			min.X -= EXPAND_SIZE
+			min.Y -= EXPAND_SIZE
+			max.X += EXPAND_SIZE
+			max.Y += EXPAND_SIZE
 			licencePlateBound = gocv.BoundingRect(approx)
+			//licencePlateBound = image.Rectangle{Min:min, Max:max}
 			break
 		}
 	}
@@ -101,7 +111,7 @@ func main() {
 	gocv.MorphologyEx(licencePlateThresh, &licencePlateMor, gocv.MorphDilate, kernel)
 
 	//Find Contour
-	contourNumbers := gocv.FindContours(licencePlateMor, gocv.RetrievalTree, gocv.ChainApproxSimple)
+	contourNumbers := gocv.FindContours(licencePlateMor, gocv.RetrievalList, gocv.ChainApproxSimple)
 
 	//Sort contour(area)
 	contourNumberAreas := make(map[float64][]image.Point)
@@ -117,7 +127,7 @@ func main() {
 	//Find number in licence plate
 	contourNumbers = [][]image.Point{}
 	for i := len(keyNumbers); i > 0; i-- {
-		if i > len(keyNumbers)-lengthOfLicencePlate-1 && i < len(keyNumbers)-1 {
+		if i > len(keyNumbers)-lengthOfLicencePlate-2 && i < len(keyNumbers)-1 {
 			contourNumbers = append(contourNumbers, contourNumberAreas[keyNumbers[i-1]])
 		}
 	}
@@ -126,8 +136,17 @@ func main() {
 	//Border number in licence plate
 	for _, v := range contourNumbers {
 		rect := gocv.BoundingRect(v)
-		gocv.Rectangle(&licencePlate, rect, colornames.Red, 2)
-		characterImg = append(characterImg, licencePlate.Region(rect))
+		//gocv.Rectangle(&licencePlate, rect, colornames.Red, 0)
+		//expand border
+		min := rect.Min
+		max := rect.Max
+		min.X -= EXPAND_SIZE
+		min.Y -= EXPAND_SIZE
+		max.X += EXPAND_SIZE
+		max.Y += EXPAND_SIZE
+
+		rectNew := image.Rectangle{min, max}
+		characterImg = append(characterImg, licencePlate.Region(rectNew))
 	}
 
 	imgForRecognize := make(map[int]gocv.Mat)
@@ -136,13 +155,15 @@ func main() {
 		gocv.Resize(v, &tmp, image.Point{28, 28}, 0, 0, gocv.InterpolationNearestNeighbor)
 		imgForRecognize[k] = tmp
 	}
+	ShowImg(licencePlate, "gray")
 
 	//load model
-	model := libSvm.NewModelFromFile("../train.svm")
+	model := libSvm.NewModelFromFile("train.svm")
 
 	for i := 0; i < len(imgForRecognize); i++ {
 		grayImg := gocv.NewMat()
 		gocv.CvtColor(imgForRecognize[i], &grayImg, gocv.ColorBGRToGray)
+		ShowImg(grayImg, "gray")
 
 		thresh := gocv.NewMat()
 		gocv.Threshold(grayImg, &thresh, 128, 255, gocv.ThresholdBinaryInv)
@@ -167,7 +188,7 @@ func main() {
 	//ShowImg(thresh, "thresh")
 	//ShowImg(canny, "canny")
 	//ShowImg(dilate, "dilate")
-	ShowImg(img, "Result detect")
+	//ShowImg(img, "Result detect")
 }
 
 func ShowImg(img gocv.Mat, name string) {
