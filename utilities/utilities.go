@@ -74,12 +74,12 @@ func ToLineCSV(filename string) (string, error) {
 	return line, nil
 }
 
-func ListFolders(folder string) []string {
+func ListFolders(folder string) ([]string, error) {
 	result := make([]string, 0)
 
 	folders, e := ioutil.ReadDir(folder)
 	if e != nil {
-		return result
+		return result, e
 	}
 
 	for _, v := range folders {
@@ -90,7 +90,7 @@ func ListFolders(folder string) []string {
 		result = append(result, fmt.Sprintf("%s/%s", folder, v.Name()))
 	}
 
-	return result
+	return result, nil
 }
 
 func ListFiles(folder string) ([]string, error) {
@@ -101,27 +101,24 @@ func ListFiles(folder string) ([]string, error) {
 		return result, e
 	}
 
-	count := 0
 	for _, v := range files {
 		if v.IsDir() {
 			continue
 		}
 
 		result = append(result, fmt.Sprintf("%s/%s", folder, v.Name()))
-		count++
-		if count > 500 {
-			break
-		}
 	}
 
 	return result, nil
 }
 
-func CreateCSVFileFromData(src string) {
-	allFolder := ListFolders(src)
+func CreateCSVFileFromData(src string) error{
+	allFolder, err := ListFolders(src)
+	if err != nil {
+		return err
+	}
 	if len(allFolder) == 0 {
-		fmt.Println("error no data")
-		return
+		return fmt.Errorf(ERROR_EMPTY_DATA)
 	}
 
 	allFiles := make([]string, 0)
@@ -153,5 +150,5 @@ func CreateCSVFileFromData(src string) {
 			fmt.Println(k)
 		}
 	}
-
+	return nil
 }

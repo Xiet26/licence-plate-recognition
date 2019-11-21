@@ -17,9 +17,12 @@ func main() {
 
 	src := "../dataset"
 
-	allFolder := utilities.ListFolders(src)
+	allFolder, err := utilities.ListFolders(src)
+	if err != nil {
+		log.Errorln(err)
+	}
 	if len(allFolder) == 0 {
-		fmt.Println("error no data for test")
+		log.Errorln("error no data for test")
 		return
 	}
 
