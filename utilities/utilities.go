@@ -152,3 +152,15 @@ func CreateCSVFileFromData(src string) error{
 	}
 	return nil
 }
+
+func ShowImg(img gocv.Mat, name string, width int, height int) {
+	window := gocv.NewWindow(name)
+	defer window.Close()
+	for {
+		window.ResizeWindow(width, height)
+		window.IMShow(img)
+		if window.WaitKey(1) >= 0 {
+			break
+		}
+	}
+}

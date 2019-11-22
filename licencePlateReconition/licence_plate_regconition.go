@@ -1,4 +1,4 @@
-package main
+package licencePlateReconition
 
 import (
 	"fmt"
@@ -11,24 +11,15 @@ import (
 )
 
 const (
-	FOLDER_PART = `licenceplatesimage` //image folder
 	EXPAND_SIZE = 4
 )
 
-var (
-	lengthOfLicencePlate = 8
-	fileName             = "51A99999.jpg" //image name
-	dataMap              = utilities.DataMap()
-)
-
-func main() {
+func Regconize(imagePath string, modelPath string, showImage bool, lengthOfLicencePlate int) (string, error) {
 	//read image
-	filePath := fmt.Sprintf("%s/%s", FOLDER_PART, fileName)
-	fmt.Println(filePath)
-	img := gocv.IMRead(filePath, gocv.IMReadColor)
+	img := gocv.IMRead(imagePath, gocv.IMReadColor)
 	if img.Empty() {
 		fmt.Println("empty image")
-		return
+		return "", fmt.Errorf(utilities.ERROR_EMPTY_IMAGE)
 	}
 	//________________Car image__________________
 	//Pre-Processing
@@ -89,6 +80,16 @@ func main() {
 	//cut licence plate
 	licencePlate := img.Region(licencePlateBound)
 
+	grayImg.Close()
+	bilateral.Close()
+	equal.Close()
+	morph.Close()
+	sub.Close()
+	morph.Close()
+	sub.Close()
+	thresh.Close()
+	canny.Close()
+	dilate.Close()
 	//________________Licence plate image__________________
 	//Pre-Processing
 	licencePlateGray := gocv.NewMat()
@@ -123,7 +124,6 @@ func main() {
 	}
 	sort.Float64s(keyNumbers)
 
-	// this here
 	//Find number in licence plate
 	contourNumbers = [][]image.Point{}
 	for i := len(keyNumbers); i > 0; i-- {
@@ -132,11 +132,11 @@ func main() {
 		}
 	}
 
+	var rects []image.Rectangle
 	characterImg := make([]gocv.Mat, 0)
 	//Border number in licence plate
 	for _, v := range contourNumbers {
 		rect := gocv.BoundingRect(v)
-		//gocv.Rectangle(&licencePlate, rect, colornames.Red, 0)
 		//expand border
 		min := rect.Min
 		max := rect.Max
@@ -145,8 +145,15 @@ func main() {
 		max.X += EXPAND_SIZE
 		max.Y += EXPAND_SIZE
 
-		rectNew := image.Rectangle{min, max}
-		characterImg = append(characterImg, licencePlate.Region(rectNew))
+		rectNew := image.Rectangle{Min: min, Max: max}
+		rects = append(rects, rectNew)
+	}
+
+	sort.Slice(rects, func(i, j int) bool {
+		return rects[i].Min.X < rects[j].Min.X
+	})
+	for _, v := range rects {
+		characterImg = append(characterImg, licencePlate.Region(v))
 	}
 
 	imgForRecognize := make(map[int]gocv.Mat)
@@ -155,50 +162,34 @@ func main() {
 		gocv.Resize(v, &tmp, image.Point{28, 28}, 0, 0, gocv.InterpolationNearestNeighbor)
 		imgForRecognize[k] = tmp
 	}
-	ShowImg(licencePlate, "gray")
+	if showImage {
+		utilities.ShowImg(licencePlate, "gray", 1000, 500)
+	}
 
 	//load model
-	model := libSvm.NewModelFromFile("train.svm")
+	model := libSvm.NewModelFromFile(modelPath)
 
+	dataMap := utilities.DataMap()
+
+	var result string
 	for i := 0; i < len(imgForRecognize); i++ {
 		grayImg := gocv.NewMat()
 		gocv.CvtColor(imgForRecognize[i], &grayImg, gocv.ColorBGRToGray)
-		ShowImg(grayImg, "gray")
+		if showImage {
+			utilities.ShowImg(grayImg, "gray", 50, 50)
+		}
 
 		thresh := gocv.NewMat()
 		gocv.Threshold(grayImg, &thresh, 128, 255, gocv.ThresholdBinaryInv)
 
-		gocv.IMWrite(fmt.Sprintf("%d.png", i), thresh)
-
 		x := utilities.MatToMapIntFloat(thresh)
 
 		data := model.Predict(x)
-		fmt.Println(fmt.Sprintf("%d: %s", i, dataMap[data]))
+
+		result += dataMap[data]
 
 		grayImg.Close()
 		thresh.Close()
 	}
-
-	//Show result
-	//ShowImg(grayImg, "gray")
-	//ShowImg(bilateral, "bilateral")
-	//ShowImg(equal, "equal")
-	//ShowImg(morph, "morph")
-	//ShowImg(sub, "sub")
-	//ShowImg(thresh, "thresh")
-	//ShowImg(canny, "canny")
-	//ShowImg(dilate, "dilate")
-	//ShowImg(img, "Result detect")
-}
-
-func ShowImg(img gocv.Mat, name string) {
-	window := gocv.NewWindow(name)
-	defer window.Close()
-	for {
-		window.ResizeWindow(800, 600)
-		window.IMShow(img)
-		if window.WaitKey(1) >= 0 {
-			break
-		}
-	}
+	return result, nil
 }
