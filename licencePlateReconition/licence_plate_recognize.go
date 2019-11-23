@@ -8,6 +8,10 @@ import (
 )
 
 func Recognize(imgForRecognize map[int]gocv.Mat, model *libSvm.Model, dataMap map[float64]string) (string, error) {
+	if model.NrClass() == 0 {
+		return "", fmt.Errorf("no model")
+	}
+
 	var result string
 
 	for i := 0; i < len(imgForRecognize); i++ {
