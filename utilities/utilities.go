@@ -112,7 +112,7 @@ func ListFiles(folder string) ([]string, error) {
 	return result, nil
 }
 
-func CreateCSVFileFromData(src string) error{
+func CreateCSVFileFromData(src string) error {
 	allFolder, err := ListFolders(src)
 	if err != nil {
 		return err
