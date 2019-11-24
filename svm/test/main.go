@@ -36,13 +36,15 @@ func main() {
 		if count%100 == 0 {
 			fmt.Println(count)
 		}
-		count++
 
 		if problems.Done() {
 			break
 		}
 
 		expect, x := problems.GetLine()
+		problems.Next()
+		count++
+
 		out := model.Predict(x)
 		if expect == out {
 			positive++
@@ -50,7 +52,6 @@ func main() {
 		}
 		negative++
 		fileNegative[string(uint64(expect))] = string(uint64(out))
-		problems.Next()
 	}
 
 	report, e := os.Create(reportFile)
