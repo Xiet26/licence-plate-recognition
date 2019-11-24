@@ -140,6 +140,7 @@ func main() {
 		panic(e)
 	}
 
+	win.SetTitle("Licence Plate Recognize")
 	win.ShowAll()
 	gtk.Main()
 }

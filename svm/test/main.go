@@ -21,7 +21,7 @@ func main() {
 	model := libSvm.NewModelFromFile(modelFile)
 
 	tmpParam := libSvm.NewParameter()
-	problems, e := libSvm.NewProblem(modelFile, tmpParam)
+	problems, e := libSvm.NewProblem(testFile, tmpParam)
 	if e != nil {
 		log.Fatal("wrong format data to test: ", e)
 	}
@@ -30,8 +30,14 @@ func main() {
 	negative := 0
 	fileNegative := make(map[string]string)
 
+	count := 0
 	problems.Begin()
 	for {
+		if count%100 == 0 {
+			fmt.Println(count)
+		}
+		count++
+
 		if problems.Done() {
 			break
 		}
